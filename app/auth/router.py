@@ -11,7 +11,7 @@ from google.auth.transport import requests as google_requests
 from app.core.database import get_session
 from app.core.config import settings
 from app.core import security
-from app.auth import models, schemas
+from app.auth import models, schemas, dependencies as auth_deps
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -72,7 +72,8 @@ async def login_google(
              id_info = id_token.verify_oauth2_token(
                  login_data.id_token, 
                  google_requests.Request(), 
-                 settings.GOOGLE_CLIENT_ID or None # Allow None if not set, though verify might fail if mismatch
+                 settings.GOOGLE_CLIENT_ID or None, # Allow None if not set, though verify might fail if mismatch
+                 clock_skew_in_seconds=10
              )
              email = id_info['email']
              full_name = id_info.get('name')
@@ -109,3 +110,12 @@ async def login_google(
         "access_token": access_token, 
         "token_type": "bearer"
     }
+
+@router.get("/me", response_model=models.UserRead)
+async def read_users_me(
+    current_user: Annotated[models.User, Depends(auth_deps.get_current_user)]
+):
+    """
+    Get current user details.
+    """
+    return current_user

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Token Helper</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        textarea {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Google Token Helper</h1>
+        <p>Use this page to generate a real Google ID Token for testing.</p>
+
+        <div style="margin-bottom: 20px;">
+            <label for="client_id">Google Client ID:</label>
+            <input type="text" id="client_id" placeholder="Enter your Client ID" style="width: 300px; padding: 5px;">
+            <button onclick="initializeSignIn()" style="padding: 5px 10px; cursor: pointer;">Load Sign-In
+                Button</button>
+        </div>
+
+        <div id="buttonDiv"></div>
+
+        <div id="output" style="display:none; margin-top: 20px;">
+            <h3>Your ID Token:</h3>
+            <p>Copy this token and use it in the JSON body for the <code>/auth/login</code> endpoint.</p>
+            <textarea id="token_area" rows="10" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        function handleCredentialResponse(response) {
+            console.log("Encoded JWT ID token: " + response.credential);
+            const output = document.getElementById("output");
+            const textarea = document.getElementById("token_area");
+            output.style.display = "block";
+            textarea.value = response.credential;
+            textarea.select();
+        }
+
+        function initializeSignIn() {
+            const clientId = document.getElementById("client_id").value.trim();
+            if (!clientId) {
+                alert("Please enter a Client ID.");
+                return;
+            }
+
+            try {
+                google.accounts.id.initialize({
+                    client_id: clientId,
+                    callback: handleCredentialResponse
+                });
+                google.accounts.id.renderButton(
+                    document.getElementById("buttonDiv"),
+                    { theme: "outline", size: "large" }
+                );
+                google.accounts.id.prompt();
+            } catch (e) {
+                console.error(e);
+                alert("Error initializing Google Sign-In. Check console.");
+            }
+        }
+    </script>
+</body>
+
+</html>

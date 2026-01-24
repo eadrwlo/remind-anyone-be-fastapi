@@ -2,6 +2,7 @@ from typing import Optional
 from datetime import datetime
 from enum import Enum
 from sqlmodel import Field, SQLModel
+from sqlalchemy import Column, DateTime
 
 class Severity(str, Enum):
     Low = "Low"
@@ -15,7 +16,7 @@ class ReminderStatus(str, Enum):
 class ReminderBase(SQLModel):
     title: str = Field(index=True)
     description: Optional[str] = None
-    due_date: datetime
+    due_date: datetime = Field(sa_column=Column(DateTime(timezone=True)))
     severity: Severity = Severity.Medium
     status: ReminderStatus = ReminderStatus.Created
 
@@ -23,7 +24,10 @@ class Reminder(ReminderBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     creator_id: int = Field(foreign_key="user.id")
     recipient_id: int = Field(foreign_key="user.id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True))
+    )
 
 class ReminderCreate(SQLModel):
     title: str
