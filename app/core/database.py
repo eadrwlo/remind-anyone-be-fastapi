@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
-engine = create_async_engine(settings.DATABASE_URL, echo=False, future=True)
+DATABASE_URL = settings.DATABASE_URL_PROD if settings.DATABASE_URL_PROD else settings.DATABASE_URL_DEV
+engine = create_async_engine(DATABASE_URL, echo=False, future=True)
 
 async def init_db():
     async with engine.begin() as conn:

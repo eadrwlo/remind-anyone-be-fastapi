@@ -4,13 +4,11 @@ services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "8080:8080"
     volumes:
       - .:/app
     env_file:
       - .env
-    # environment:
-    #   - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/remind_anyone
     depends_on:
       db:
         condition: service_healthy

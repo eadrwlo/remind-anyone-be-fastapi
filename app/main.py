@@ -13,7 +13,12 @@ from app.auth import models as auth_models
 from app.friends import models as friends_models
 from app.reminders import models as reminders_models
 
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+
 app = FastAPI(title=settings.PROJECT_NAME)
+
+# Trust the X-Forwarded-Proto headers (Cloud Run)
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -27,6 +32,7 @@ app.include_router(reminders_router.router)
 
 origins = [
     "http://localhost:8081",
+    "https://remindanyone.web.app"
 ]
 
 app.add_middleware(

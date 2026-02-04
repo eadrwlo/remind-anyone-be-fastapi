@@ -3,7 +3,8 @@ import logging
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Remind Anyone Backend"
-    DATABASE_URL: str
+    DATABASE_URL_PROD: str = ""   
+    DATABASE_URL_DEV: str = ""
     
     # Google SSO (Optional for initial setup but good to have prepared)
     GOOGLE_CLIENT_ID: str = ""
