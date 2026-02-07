@@ -1,4 +1,6 @@
 from typing import Annotated, List
+import httpx
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,6 +37,28 @@ async def create_reminder(
     session.add(reminder)
     await session.commit()
     await session.refresh(reminder)
+
+    # Send Push Notification if recipient has a token
+    # Retrieve recipient to get token
+    recipient_result = await session.execute(select(auth_models.User).where(auth_models.User.id == reminder_data.recipient_id))
+    recipient = recipient_result.scalars().first()
+
+    if recipient and recipient.expo_push_token:
+        try:
+            async with httpx.AsyncClient() as client:
+                message = {
+                    "to": recipient.expo_push_token,
+                    "sound": "default",
+                    "title": f"New Reminder from {current_user.username}",
+                    "body": reminder.title,
+                    "data": {"reminderId": reminder.id},
+                }
+                response = await client.post("https://exp.host/--/api/v2/push/send", json=message)
+                response.raise_for_status()
+                logging.info(f"Push notification sent to {recipient.username}: {response.json()}")
+        except Exception as e:
+            logging.error(f"Failed to send push notification: {e}")
+
     return reminder
 
 @router.get("/", response_model=List[models.ReminderRead])

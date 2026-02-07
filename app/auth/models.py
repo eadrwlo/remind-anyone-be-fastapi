@@ -6,6 +6,7 @@ class UserBase(SQLModel):
     username: str = Field(unique=True, index=True)
     full_name: Optional[str] = None
     picture: Optional[str] = None
+    expo_push_token: Optional[str] = None
 
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

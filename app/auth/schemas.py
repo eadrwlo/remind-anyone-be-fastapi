@@ -9,3 +9,6 @@ class TokenPayload(BaseModel):
 
 class GoogleLogin(BaseModel):
     id_token: str
+
+class DeviceTokenRequest(BaseModel):
+    token: str

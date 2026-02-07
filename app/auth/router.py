@@ -119,3 +119,18 @@ async def read_users_me(
     Get current user details.
     """
     return current_user
+
+@router.put("/me/device-token", response_model=models.UserRead)
+async def update_device_token(
+    token_request: schemas.DeviceTokenRequest,
+    current_user: Annotated[models.User, Depends(auth_deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    """
+    Update the current user's Expo Push Token.
+    """
+    current_user.expo_push_token = token_request.token
+    session.add(current_user)
+    await session.commit()
+    await session.refresh(current_user)
+    return current_user
