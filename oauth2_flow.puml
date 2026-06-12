@@ -1,0 +1,47 @@
+@startuml
+skinparam maxMessageSize 150
+actor Client
+participant "FastAPI App" as API
+participant "Google OAuth2" as Google
+database "Database" as DB
+
+== Authentication Flow (Google) ==
+Client -> Google: 1. Request OAuth2 ID Token\n(from frontend)
+Google --> Client: 2. Return ID Token
+
+Client -> API: 3. POST /auth/login\n(with ID Token)
+activate API
+API -> Google: 4. Verify ID Token (using verify_oauth2_token)
+Google --> API: 5. Verification Result & User Info (Email, Name)
+
+alt If Token Valid
+    API -> DB: 6. Check if user exists by Email
+    DB --> API: 7. User Result
+
+    alt User does not exist
+        API -> DB: 8. Auto-provision new User
+        DB --> API: 9. User Created
+    end
+
+    API -> API: 10. Generate JWT Access Token\n(signed with SECRET_KEY)
+    API --> Client: 11. Return {"access_token": "...", "token_type": "bearer"}
+else If Token Invalid
+    API --> Client: 11b. 400 Bad Request
+end
+deactivate API
+
+== Protected Route Access ==
+Client -> API: 12. GET /protected/route\n(Header: Authorization: Bearer <JWT>)
+activate API
+API -> API: 13. Decode & Verify JWT signature
+API -> DB: 14. Fetch User by ID from JWT payload
+DB --> API: 15. User Object
+
+alt If Token valid & User exists
+    API --> Client: 16. Return requested data
+else
+    API --> Client: 16b. 401 Unauthorized
+end
+deactivate API
+
+@enduml
